@@ -1,9 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"net"
 	"net/http"
+	"os"
+	"path"
+	"path/filepath"
+	"rest_api/internal/config"
 	"rest_api/internal/user"
 	"rest_api/pkg/logging"
 	"time"
@@ -15,18 +20,42 @@ func main() {
 	router := httprouter.New()
 	handler := user.NewHandler(logger)
 
+	cfg := config.GetConfig()
+
 	logger.Info("register user handler")
 	handler.Register(router)
 
-	start(router)
+	start(router, cfg)
 }
 
-func start(router *httprouter.Router) {
+func start(router *httprouter.Router, cfg *config.Config) {
 	logger := logging.GetLogger()
 	logger.Info("start application")
-	listener, err := net.Listen("tcp", ":1234")
-	if err != nil {
-		panic(err)
+
+	var listener net.Listener
+	var listenErr error
+
+	if cfg.Listen.Type == "sock" {
+		logger.Info("detect app path")
+		appDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			logger.Fatal(err)
+		}
+
+		logger.Info("create socket")
+		socketPath := path.Join(appDir, "app.sock")
+
+		logger.Info("listen unix socket")
+		listener, listenErr = net.Listen("unix", socketPath)
+		logger.Infof("server are listening unix socket :%s", socketPath)
+	} else {
+		logger.Info("listen tcp")
+		logger.Infof("server are listening port %s:%s", cfg.Listen.BindIP, cfg.Listen.Port)
+		listener, listenErr = net.Listen("tcp", fmt.Sprintf("%s:%s", cfg.Listen.BindIP, cfg.Listen.Port))
+	}
+
+	if listenErr != nil {
+		logger.Fatal(listenErr)
 	}
 
 	server := &http.Server{
@@ -35,6 +64,5 @@ func start(router *httprouter.Router) {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	logger.Info("server are listening port 0.0.0.0:1234")
 	logger.Fatal(server.Serve(listener))
 }
