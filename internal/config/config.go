@@ -15,6 +15,15 @@ type Config struct {
 		BindIP string `yaml:"bind_ip" env-default:"127.0.0.1"`
 		Port   string `yaml:"port" env-default:"8080"`
 	} `yaml:"listen"`
+	Mongodb struct {
+		Host       string `yaml:"host"`
+		Port       string `yaml:"port"`
+		Database   string `yaml:"database"`
+		AuthDB     string `yaml:"auth_db"`
+		Username   string `yaml:"username"`
+		Password   string `yaml:"password"`
+		Collection string `yaml:"collection"`
+	} `yaml:"mongodb"`
 }
 
 var instance *Config
