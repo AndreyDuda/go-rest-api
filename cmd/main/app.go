@@ -24,6 +24,7 @@ func main() {
 	handler := user.NewHandler(logger)
 
 	cfg := config.GetConfig()
+
 	cfgMongo := cfg.Mongodb
 	mongoDBClient, err := mongodb.NewClient(
 		context.Background(),

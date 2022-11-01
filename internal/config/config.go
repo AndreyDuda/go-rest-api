@@ -16,6 +16,7 @@ type Config struct {
 		Port   string `yaml:"port" env-default:"8080"`
 	} `yaml:"listen"`
 	storage StorageConfig `yaml:"storage"`
+	Mongodb Mongodb
 }
 
 type Mongodb struct {
